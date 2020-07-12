@@ -1,0 +1,87 @@
+#!/app/bin/python3
+
+import json
+import os
+from tempfile import NamedTemporaryFile
+
+from lxml import etree
+
+import svgutils.transform as sg
+
+
+class IconCreator(object):
+    _asset_dir = "/tmp/assets"
+    _dist_dir = "/tmp/dist"
+    _output_width = 140
+    _output_height = 140
+
+    def __init__(self, name, width="5cm", height="5cm"):
+        self.name = name
+        self.fig = sg.SVGFigure(height, width)
+
+    def load_asset(self, name):
+        path = os.path.join(self._asset_dir, name)
+        return sg.fromfile(path).getroot()
+
+    def append(self, *args):
+        self.fig.append(*args)
+
+    def export(self, filename, width, height=None):
+        with open(filename, mode="wb") as f:
+            f.write(self.to_png(width, height))
+
+    def to_svg(self):
+        with open("/tmp/dist/cerp-gcp.svg", "wb") as f:
+            f.write(creator.fig.to_str())
+
+    def to_png(self, width, height=None):
+        dimensions  = "{}:{}".format(width, height or width)
+
+        # svgexport fails on files missing the svg extension
+        in_tempfile = NamedTemporaryFile(suffix=".svg", delete=False)
+        in_tempfile.write(self.dumps())
+
+        # svgexport also fails if the file isn't closed
+        in_tempfile.close()
+
+        out_tempfile = NamedTemporaryFile()
+        command = 'svgexport {} {} {} > /dev/null'.format(in_tempfile.name, out_tempfile.name, dimensions)
+        print(command)
+        exit_code = os.system(command)
+        if exit_code != 0:
+            raise RuntimeError("External command svgexport failed")
+        out_tempfile.seek(0)
+        return out_tempfile.read()
+
+    def dumps(self, *args, **kwargs):
+        out = etree.tostring(
+            self.fig.root,
+            xml_declaration=True,
+            standalone=True)
+        # but even this doesn't make it. The encoding must be changed to UTF-8 (otherwise svgexport fails)
+        out = out.replace(b"version='1.0'", b'version="1.0"')
+        out = out.replace(b"encoding='ASCII'", b'encoding="UTF-8"')
+        return out
+
+    def composite(self, config):
+        figs = []
+        for asset in config["assets"]:
+            fig = self.load_asset(asset["src"])
+            fig.moveto(
+                asset["x"],
+                asset["y"],
+                scale=asset["scale"])
+            figs.append(fig)
+        self.append(figs)
+        self.export("/tmp/dist/%s" % self.name, 140)
+
+
+with open("/tmp/assets/config.json") as f:
+    config = json.loads(f.read())
+
+
+for graphic in config:
+    creator = IconCreator(graphic["name"])
+    creator.composite(
+        dict(size=graphic["size"],
+             assets=graphic["assets"]))
