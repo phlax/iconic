@@ -1,0 +1,32 @@
+# https://travis-ci.org/#!/phlax/svgicon
+
+dist: bionic
+
+before_install:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - >
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    && sudo apt update
+    && sudo apt -y -o Dpkg::Options::="--force-confnew" install docker-ce
+
+install:
+  - make image
+
+script:
+  - docker images
+  - sha256sum example/dist/example.png > /tmp/example.chksum
+  - cp -a example/assets assets
+  - make icons
+  - cp dist/example.png example/dist/example.png
+  - sha256sum -c /tmp/example.chksum
+
+before_deploy:
+  - echo $DOCKER_ACCESS_TOKEN | docker login -u phlax --password-stdin
+
+deploy:
+  provider: script
+  script: make hub-image
+  skip_cleanup: true
+  on:
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^(master)$
