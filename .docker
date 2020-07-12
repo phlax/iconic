@@ -1,0 +1,13 @@
+
+export APP_NAME=puppeteer
+export APP_USERNAME=puppeteer
+export SYSTEM_PKGS=""
+export BUILD_FROM=phlax/puppeteer
+export BUILD_PKGS="\
+       build-essential \
+       pkg-config \
+       python3-dev"
+export EGGS="\
+       git+https://github.com/CrazyPython/svgmanip#egg=svgmanip"
+export NPM_PKGS="-g svgexport"
+export NODE_VERSION=12
