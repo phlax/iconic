@@ -1,0 +1,20 @@
+[
+    {
+	"size": 140,
+	"name": "example.png",
+	"assets": [
+	    {
+		"src": "bg.svg",
+                "scale": ".53",
+                "x": 7,
+                "y": 17
+	    },
+	    {
+		"src": "fg.svg",
+                "scale": "1.2",
+                "x": 100,
+                "y": 100
+	    }
+	]
+    }
+]
