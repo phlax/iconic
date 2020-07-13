@@ -8,6 +8,6 @@ export BUILD_PKGS="\
        pkg-config \
        python3-dev"
 export EGGS="\
-       git+https://github.com/CrazyPython/svgmanip#egg=svgmanip"
+       svgutils"
 export NPM_PKGS="-g svgexport"
 export NODE_VERSION=12
